@@ -40,6 +40,7 @@ func main() {
 	mux.HandleFunc("GET /v1/err", healthCheckError)
 
 	mux.HandleFunc("POST /v1/users", cfg.NewUser)
+	mux.HandleFunc("GET /v1/users", cfg.GetUser)
 
 	fmt.Printf("Starting server on %s\n", server.Addr)
 	err = server.ListenAndServe()

@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -38,5 +39,20 @@ func (cfg *apiConfig) NewUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, 500, err.Error())
 		return
 	}
-	respondWithJSON(w, 200, user)
+	respondWithJSON(w, 200, databaseUserToUser(user))
+}
+
+func (cfg *apiConfig) GetUser(w http.ResponseWriter, r *http.Request) {
+	apiKey := r.Header.Get("Authorization")
+	if apiKey == "" || apiKey[:6] != "ApiKey" {
+		respondWithJSON(w, 401, messageResponse{Message: "Need to send a 'Authorization: ApiKey API_KEY' header."})
+		return
+	}
+	fmt.Println(apiKey)
+
+	user, err := cfg.DB.GetUserByApiKey(r.Context(), apiKey[7:])
+	if err != nil {
+		respondWithError(w, 401, "User not found or api key invalid")
+	}
+	respondWithJSON(w, 200, databaseUserToUser(user))
 }
