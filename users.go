@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -11,7 +10,7 @@ import (
 )
 
 type messageResponse struct {
-	Message string
+	Message string `json:"message"`
 }
 
 func (cfg *apiConfig) NewUser(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +47,6 @@ func (cfg *apiConfig) GetUser(w http.ResponseWriter, r *http.Request) {
 		respondWithJSON(w, 401, messageResponse{Message: "Need to send a 'Authorization: ApiKey API_KEY' header."})
 		return
 	}
-	fmt.Println(apiKey)
 
 	user, err := cfg.DB.GetUserByApiKey(r.Context(), apiKey[7:])
 	if err != nil {

@@ -6,6 +6,10 @@ import (
 	"net/http"
 )
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	data, err := json.Marshal(payload)
@@ -15,17 +19,10 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	}
 	w.WriteHeader(code)
 	w.Write(data)
-	return
 }
 
 func respondWithError(w http.ResponseWriter, code int, msg string) {
 	respondWithJSON(w, code, ErrorResponse{
 		Error: msg,
 	})
-	return
 }
-
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
-
