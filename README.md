@@ -10,7 +10,13 @@
 ```
  docker run -p 5432:5432 -e POSTGRES_PASSWORD=postgres -d postgres
 ```
-- Run database migrations (from ./sql/schema directry):
+- Connect to the database and create a database to connect to, later to be specified in your connection string
+```
+psql -h localhost -U postgres
+
+CREATE DATABASE <DB_NAME>;
+```
+- Run database migrations (from ./sql/schema directory):
 ```
 # Up Migrations: 
 goose postgres postgres://postgres:postgres@localhost:5432/blogator up
@@ -25,4 +31,9 @@ goose postgres postgres://postgres:postgres@localhost:5432/blogator down
 #### Run the project (project root directory):
 ```
 go run .
+```
+Side note, you'll need a .env file with these environment variables (or add them to the scope of the above command):
+```
+DB_CONN=postgres://postgres:postgres@localhost:5432/<DB_NAME>?sslmode=disable
+PORT=8080
 ```

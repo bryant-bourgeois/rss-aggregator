@@ -51,6 +51,7 @@ func (cfg *apiConfig) GetUser(w http.ResponseWriter, r *http.Request) {
 	user, err := cfg.DB.GetUserByApiKey(r.Context(), apiKey[7:])
 	if err != nil {
 		respondWithError(w, 401, "User not found or api key invalid")
+		return
 	}
 	respondWithJSON(w, 200, databaseUserToUser(user))
 }
