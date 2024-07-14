@@ -41,17 +41,6 @@ func (cfg *apiConfig) NewUser(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, 200, databaseUserToUser(user))
 }
 
-func (cfg *apiConfig) GetUser(w http.ResponseWriter, r *http.Request) {
-	apiKey := r.Header.Get("Authorization")
-	if apiKey == "" || apiKey[:6] != "ApiKey" {
-		respondWithJSON(w, 401, messageResponse{Message: "Need to send a 'Authorization: ApiKey API_KEY' header."})
-		return
-	}
-
-	user, err := cfg.DB.GetUserByApiKey(r.Context(), apiKey[7:])
-	if err != nil {
-		respondWithError(w, 401, "User not found or api key invalid")
-		return
-	}
-	respondWithJSON(w, 200, databaseUserToUser(user))
+func (cfg *apiConfig) GetUser(w http.ResponseWriter, r *http.Request, u database.User) {
+	respondWithJSON(w, 200, databaseUserToUser(u))
 }
