@@ -40,6 +40,7 @@ func main() {
 	mux.HandleFunc("GET /v1/err", healthCheckError)
 
 	mux.HandleFunc("POST /v1/users", cfg.NewUser)
+	mux.HandleFunc("GET /v1/feeds", cfg.GetFeeds)
 
 	mux.Handle("GET /v1/users", cfg.middlewareAuth(cfg.GetUser))
 	mux.Handle("POST /v1/feeds", cfg.middlewareAuth(cfg.NewFeed))
