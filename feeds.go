@@ -17,7 +17,17 @@ func (cfg *apiConfig) NewFeed(w http.ResponseWriter, r *http.Request, u database
 	params := parameters{}
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	decoder.Decode(&params)
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, 400, "Invalid request")
+		return
+	}
+
+	if params.Url[len(params.Url)-4:] != ".xml" {
+		respondWithError(w, 400, "Supplied url was not to an RSS feed")
+		return
+	}
+
 	feedParams := database.CreateFeedParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
