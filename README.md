@@ -19,10 +19,10 @@ CREATE DATABASE <DB_NAME>;
 - Run database migrations (from ./sql/schema directory):
 ```
 # Up Migrations: 
-goose postgres postgres://postgres:postgres@localhost:5432/blogator up
+goose postgres postgres://postgres:postgres@localhost:5432/<DB_NAME> up
 
 # Down Migrations:
-goose postgres postgres://postgres:postgres@localhost:5432/blogator down
+goose postgres postgres://postgres:postgres@localhost:5432/<DB_NAME> down
 ```
 - If making any database query changes to files in ./sql/queries, generate Go code in the internal/database package with ```sqlc generate``` (from project root).
 
