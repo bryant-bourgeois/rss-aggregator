@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
-	"sort"
 	"github.com/bryant-bourgeois/rss-aggregator/internal/database"
+	"net/http"
+	"sort"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -24,9 +24,9 @@ func (cfg *apiConfig) FollowFeed(w http.ResponseWriter, r *http.Request, u datab
 		return
 	}
 	dbFollow, err := cfg.DB.FollowFeed(r.Context(), database.FollowFeedParams{
-		ID: uuid.New(),
-		UserID: u.ID,
-		FeedID: params.FeedId,
+		ID:        uuid.New(),
+		UserID:    u.ID,
+		FeedID:    params.FeedId,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
 	})
@@ -59,12 +59,12 @@ func (cfg *apiConfig) DeleteFeedFollow(w http.ResponseWriter, r *http.Request, u
 		respondWithError(w, 500, err.Error())
 		return
 	}
-	respondWithJSON(w, 200, messageResponse{Message: fmt.Sprintf("Successfully unfollowed feed %v", targetFeedUUID)})	
+	respondWithJSON(w, 200, messageResponse{Message: fmt.Sprintf("Successfully unfollowed feed %v", targetFeedUUID)})
 }
 
 func (cfg *apiConfig) GetUserFeedFollows(w http.ResponseWriter, r *http.Request, u database.User) {
 	follows, err := cfg.DB.ListFeedFollows(r.Context(), u.ID)
-	if err != nil  {
+	if err != nil {
 		respondWithError(w, 500, "Internal server error")
 		return
 	}
@@ -72,9 +72,9 @@ func (cfg *apiConfig) GetUserFeedFollows(w http.ResponseWriter, r *http.Request,
 	for _, val := range follows {
 		userFollows = append(userFollows, databaseFeedFollowToFeedFollow(val))
 	}
-	sort.Slice(userFollows, func(i, j int ) bool {
+	sort.Slice(userFollows, func(i, j int) bool {
 		return userFollows[i].CreatedAt.Before(userFollows[j].CreatedAt)
 	})
 	respondWithJSON(w, 200, userFollows)
-	
+
 }
