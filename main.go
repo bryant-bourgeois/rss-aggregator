@@ -40,10 +40,14 @@ func main() {
 	mux.HandleFunc("GET /v1/err", healthCheckError)
 
 	mux.HandleFunc("POST /v1/users", cfg.NewUser)
-	mux.HandleFunc("GET /v1/feeds", cfg.GetFeeds)
-
 	mux.Handle("GET /v1/users", cfg.middlewareAuth(cfg.GetUser))
+
+	mux.HandleFunc("GET /v1/feeds", cfg.GetFeeds)
 	mux.Handle("POST /v1/feeds", cfg.middlewareAuth(cfg.NewFeed))
+
+	mux.Handle("GET /v1/feed_follows", cfg.middlewareAuth(cfg.GetUserFeedFollows))
+	mux.Handle("POST /v1/feed_follows", cfg.middlewareAuth(cfg.FollowFeed))
+	mux.Handle("DELETE /v1/feed_follows/{feedFollowID}", cfg.middlewareAuth(cfg.DeleteFeedFollow))
 
 	fmt.Printf("Starting server on %s\n", server.Addr)
 	err = server.ListenAndServe()

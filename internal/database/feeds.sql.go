@@ -48,6 +48,89 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 	return i, err
 }
 
+const followFeed = `-- name: FollowFeed :one
+INSERT INTO users_feeds (id, user_id, feed_id, created_at, updated_at)
+VALUES($1, $2, $3, $4, $5)
+RETURNING id, user_id, feed_id, created_at, updated_at
+`
+
+type FollowFeedParams struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	FeedID    uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+}
+
+func (q *Queries) FollowFeed(ctx context.Context, arg FollowFeedParams) (UsersFeed, error) {
+	row := q.db.QueryRowContext(ctx, followFeed,
+		arg.ID,
+		arg.UserID,
+		arg.FeedID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i UsersFeed
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FeedID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getFeedFollow = `-- name: GetFeedFollow :one
+SELECT id, user_id, feed_id, created_at, updated_at FROM users_feeds WHERE id = $1
+`
+
+func (q *Queries) GetFeedFollow(ctx context.Context, id uuid.UUID) (UsersFeed, error) {
+	row := q.db.QueryRowContext(ctx, getFeedFollow, id)
+	var i UsersFeed
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.FeedID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const listFeedFollows = `-- name: ListFeedFollows :many
+SELECT id, user_id, feed_id, created_at, updated_at FROM users_feeds WHERE user_id = $1
+`
+
+func (q *Queries) ListFeedFollows(ctx context.Context, userID uuid.UUID) ([]UsersFeed, error) {
+	rows, err := q.db.QueryContext(ctx, listFeedFollows, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []UsersFeed
+	for rows.Next() {
+		var i UsersFeed
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.FeedID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listFeeds = `-- name: ListFeeds :many
 SELECT id, created_at, updated_at, name, url, user_id FROM feeds
 ORDER BY name
@@ -81,4 +164,13 @@ func (q *Queries) ListFeeds(ctx context.Context) ([]Feed, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const unfollowFeed = `-- name: UnfollowFeed :exec
+DELETE FROM users_feeds WHERE id = $1
+`
+
+func (q *Queries) UnfollowFeed(ctx context.Context, id uuid.UUID) error {
+	_, err := q.db.ExecContext(ctx, unfollowFeed, id)
+	return err
 }

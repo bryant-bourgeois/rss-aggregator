@@ -12,8 +12,8 @@ import (
 
 func (cfg *apiConfig) NewFeed(w http.ResponseWriter, r *http.Request, u database.User) {
 	type parameters struct {
-		Name string
-		Url  string
+		Name string `json:"name"`
+		Url  string `json:"url"`
 	}
 	params := parameters{}
 	decoder := json.NewDecoder(r.Body)
@@ -28,7 +28,7 @@ func (cfg *apiConfig) NewFeed(w http.ResponseWriter, r *http.Request, u database
 		respondWithError(w, 400, "Supplied url was not to an RSS feed")
 		return
 	}
-	
+
 	feedParams := database.CreateFeedParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now().UTC(),
@@ -42,7 +42,25 @@ func (cfg *apiConfig) NewFeed(w http.ResponseWriter, r *http.Request, u database
 		respondWithError(w, 500, err.Error())
 		return
 	}
-	respondWithJSON(w, 201, feed)
+	follow, err := cfg.DB.FollowFeed(r.Context(), database.FollowFeedParams{
+		ID:        uuid.New(),
+		UserID:    u.ID,
+		FeedID:    feed.ID,
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+	})
+	if err != nil {
+		respondWithError(w, 500, err.Error())
+		return
+	}
+	type newFeedAndSubscription struct {
+		Feed   Feed       `json:"feed"`
+		Follow FeedFollow `json:"feed_follow"`
+	}
+	respondWithJSON(w, 201, newFeedAndSubscription{
+		Feed:   databaseFeedToFeed(feed),
+		Follow: databaseFeedFollowToFeedFollow(follow),
+	})
 }
 
 func (cfg *apiConfig) GetFeeds(w http.ResponseWriter, r *http.Request) {
