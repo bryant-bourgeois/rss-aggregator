@@ -20,3 +20,14 @@ SELECT * FROM users_feeds WHERE id = $1;
 
 -- name: UnfollowFeed :exec
 DELETE FROM users_feeds WHERE id = $1;
+
+-- name: GetNextFeedsToFetch :many
+SELECT * FROM feeds
+ORDER BY CASE WHEN last_fetched_at IS NULL 
+THEN 0 ELSE 1 END, last_fetched_at 
+LIMIT $1;
+
+-- name: MarkFeedFetched :exec
+UPDATE feeds
+SET updated_at = $2, last_fetched_at = $2
+WHERE id = $1;
