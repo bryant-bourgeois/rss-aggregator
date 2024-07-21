@@ -74,3 +74,31 @@ func databaseFeedFollowToFeedFollow(follow database.UsersFeed) FeedFollow {
 		UpdatedAt: follow.UpdatedAt,
 	}
 }
+
+type Post struct {
+	ID          uuid.UUID `json:"id"`
+	FeedID      uuid.UUID `json:"feed_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	PublishedAt string    `json:"published_at"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Url         string    `json:"url"`
+}
+
+func databasePostsToPosts(posts []database.GetPostsByUserIdRow) []Post {
+	output := make([]Post, 0)
+	for _, val := range posts {
+		output = append(output, Post{
+			ID:          val.ID.UUID,
+			FeedID:      val.FeedID.UUID,
+			Title:       val.Title.String,
+			Description: val.Description.String,
+			PublishedAt: val.PublishedAt.String,
+			CreatedAt:   val.CreatedAt.Time,
+			UpdatedAt:   val.UpdatedAt.Time,
+			Url:         val.Url.String,
+		})
+	}
+	return output
+}
