@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/bryant-bourgeois/rss-aggregator/internal/database"
+	"github.com/google/uuid"
 )
 
 type RssFeed struct {
@@ -83,7 +84,7 @@ func (cfg *apiConfig) UpdateFeedData(amount int) {
 				fmt.Printf("There was an error fetching RSS feed at %s: %s\n", oldFeed.Url, err)
 				return
 			}
-			fmt.Printf("Processed feed: %s. Data: %s\n", oldFeed.Name, feed.Channel.Title)
+			fmt.Printf("Processing feed: %s. Channel Title: %s\n", oldFeed.Name, feed.Channel.Title)
 			err = c.DB.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
 				ID:        oldFeed.ID,
 				UpdatedAt: time.Now().UTC(),
@@ -91,6 +92,27 @@ func (cfg *apiConfig) UpdateFeedData(amount int) {
 			if err != nil {
 				fmt.Printf("There was an error marking feed %s as fetched\n", oldFeed.ID)
 				return
+			}
+			for _, val := range feed.Channel.Item {
+				postParams := database.CreatePostParams{
+					ID:          uuid.New(),
+					CreatedAt:   time.Now().UTC(),
+					UpdatedAt:   time.Now().UTC(),
+					Title:       val.Title,
+					Url:         val.Link,
+					Description: val.Description,
+					PublishedAt: val.PubDate,
+					FeedID:      oldFeed.ID,
+				}
+				query, err := cfg.DB.CreatePost(context.Background(), postParams)
+				if err != nil {
+					if strings.ContainsAny(err.Error(), "duplicate key value violates unique constraint") {
+						continue
+					} else {
+						fmt.Printf("Error inserting post into DB: %s\n", err)
+					}
+				}
+				fmt.Printf("Added post to feed %s:\n%v\n", oldFeed.ID, query)
 			}
 			return
 		}(val, *cfg)

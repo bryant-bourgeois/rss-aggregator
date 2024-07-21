@@ -24,10 +24,11 @@ func (cfg *apiConfig) NewFeed(w http.ResponseWriter, r *http.Request, u database
 		return
 	}
 
-	if params.Url[len(params.Url)-4:] != ".xml" {
-		respondWithError(w, 400, "Supplied url was not to an RSS feed")
-		return
-	}
+	// Some valid RSS feed urls don't serve an xml document directly
+	// if params.Url[len(params.Url)-4:] != ".xml" {
+	// 	respondWithError(w, 400, "Supplied url was not to an RSS feed")
+	// 	return
+	// }
 
 	feedParams := database.CreateFeedParams{
 		ID:        uuid.New(),
