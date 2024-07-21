@@ -106,6 +106,7 @@ func (cfg *apiConfig) UpdateFeedData(amount int) {
 				}
 				query, err := cfg.DB.CreatePost(context.Background(), postParams)
 				if err != nil {
+					//Dont wanna deal with checking for existing post content in a feed, just let postgres return an error
 					if strings.ContainsAny(err.Error(), "duplicate key value violates unique constraint") {
 						continue
 					} else {
