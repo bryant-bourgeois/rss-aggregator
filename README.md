@@ -1,5 +1,9 @@
 ## RSS Feed Aggregator
 
+Boot.dev project. Main functionality is for users to supply urls of RSS feeds, then periodically fetch the content from stale feeds and store their posts.
+
+---
+
 ### Getting Started
 
 ---
