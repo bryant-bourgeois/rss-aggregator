@@ -5,5 +5,7 @@ import (
 )
 
 type apiConfig struct {
-	DB *database.Queries
+	DB                        *database.Queries
+	FeedUpdateIntervalSeconds int
+	FeedRefreshAmount         int
 }

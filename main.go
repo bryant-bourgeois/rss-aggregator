@@ -12,7 +12,10 @@ import (
 )
 
 func main() {
-	cfg := apiConfig{}
+	cfg := apiConfig{
+		FeedRefreshAmount:         2,
+		FeedUpdateIntervalSeconds: 30,
+	}
 
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -49,6 +52,7 @@ func main() {
 	mux.Handle("POST /v1/feed_follows", cfg.middlewareAuth(cfg.FollowFeed))
 	mux.Handle("DELETE /v1/feed_follows/{feedFollowID}", cfg.middlewareAuth(cfg.DeleteFeedFollow))
 
+	go RefreshFeeds(cfg)
 	fmt.Printf("Starting server on %s\n", server.Addr)
 	err = server.ListenAndServe()
 	if err != nil {

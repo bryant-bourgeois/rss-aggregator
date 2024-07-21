@@ -1,8 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/xml"
+	"fmt"
 	"net/http"
+	"strings"
+	"sync"
+	"time"
+
+	"github.com/bryant-bourgeois/rss-aggregator/internal/database"
 )
 
 type RssFeed struct {
@@ -35,6 +42,9 @@ type RssFeed struct {
 }
 
 func FetchRssFeed(url string) (RssFeed, error) {
+	if !strings.HasPrefix(url, "http") {
+		url = "https://" + url
+	}
 	resp, err := http.Get(url)
 	if err != nil {
 		return RssFeed{}, err
@@ -49,4 +59,50 @@ func FetchRssFeed(url string) (RssFeed, error) {
 		return RssFeed{}, err
 	}
 	return feed, nil
+}
+
+func (cfg *apiConfig) UpdateFeedData(amount int) {
+	fmt.Println("Starting feed update cycle")
+	feeds, err := cfg.DB.GetNextFeedsToFetch(context.Background(), int32(amount))
+	if err != nil {
+		fmt.Printf("Error getting feeds from db to update: %s\n", err)
+		time.Sleep(30)
+		return
+	}
+	if len(feeds) < 1 {
+		fmt.Printf("No feeds to fetch, waiting %d seconds before checking again.\n", cfg.FeedUpdateIntervalSeconds)
+		return
+	}
+	wg := sync.WaitGroup{}
+	for _, val := range feeds {
+		wg.Add(1)
+		go func(oldFeed database.Feed, c apiConfig) {
+			defer wg.Done()
+			feed, err := FetchRssFeed(oldFeed.Url)
+			if err != nil {
+				fmt.Printf("There was an error fetching RSS feed at %s: %s\n", oldFeed.Url, err)
+				return
+			}
+			fmt.Printf("Processed feed: %s. Data: %s\n", oldFeed.Name, feed.Channel.Title)
+			err = c.DB.MarkFeedFetched(context.Background(), database.MarkFeedFetchedParams{
+				ID:        oldFeed.ID,
+				UpdatedAt: time.Now().UTC(),
+			})
+			if err != nil {
+				fmt.Printf("There was an error marking feed %s as fetched\n", oldFeed.ID)
+				return
+			}
+			return
+		}(val, *cfg)
+	}
+	wg.Wait()
+	return
+}
+
+func RefreshFeeds(c apiConfig) {
+	ticker := time.NewTicker(time.Second * time.Duration(c.FeedUpdateIntervalSeconds))
+	for {
+		<-ticker.C
+		c.UpdateFeedData(c.FeedRefreshAmount)
+	}
 }
