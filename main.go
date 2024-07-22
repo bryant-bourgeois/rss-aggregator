@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/bryant-bourgeois/rss-aggregator/internal/database"
 	"github.com/joho/godotenv"
@@ -12,15 +13,22 @@ import (
 )
 
 func main() {
-	cfg := apiConfig{
-		FeedRefreshAmount:         2,
-		FeedUpdateIntervalSeconds: 30,
-	}
-
 	err := godotenv.Load(".env")
 	if err != nil {
 		fmt.Printf("Couldn't load environment variable file: %s\n", err)
 		os.Exit(1)
+	}
+	refreshInterval, err := strconv.Atoi(os.Getenv("DB_FETCH_INTERVAL_SECONDS"))
+	if err != nil {
+		refreshInterval = 60
+	}
+	refreshAmount, err := strconv.Atoi(os.Getenv("DB_FETCH_COUNT"))
+	if err != nil {
+		refreshAmount = 3
+	}
+	cfg := apiConfig{
+		FeedRefreshAmount:         refreshAmount,
+		FeedUpdateIntervalSeconds: refreshInterval,
 	}
 
 	dbConn := os.Getenv("DB_CONN")
